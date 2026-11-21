@@ -162,6 +162,7 @@
   function suggest(text) {
     const matched = signals.filter(([, pattern]) => pattern.test(text));
     if (FuturePrompt.alternatives(text).length || /二选一|做决定/.test(text)) return 'choice';
+    if (matched[0]?.[0] !== 'salary' && /还(?:会)?在|继续在|继续留在|留在.{0,16}行业/.test(text) && /行业|从业|业内|领域/.test(text)) return 'careerStay';
     return matched[0]?.[0] ?? 'general';
   }
 
@@ -206,6 +207,16 @@
     general:['确认重复做成的那一步是否也适用于平常的条件。','回到最初的问题，看看现在能用哪条实际证据回答它。','核对持续投入之后得到的真实变化，以及代价是否仍能承受。'],
   };
 
+  const continuity = {
+    routine:['原来的生活节奏大体延续','有些安排偶尔改变，忙的时候还会回到原来的节奏','已经持续的那项安排最有机会留下来'],
+    study:['先停留在探索和入门阶段','能积累练习，但目前的卡点仍可能拖住进度','在已能做出的成果上继续积累'],
+    bonds:['相处方式大体延续','相处暂时按现有节奏，彼此的期待仍需要对齐','已经一起试过的安排有条件延续'],
+    choice:['先维持现有安排，两个选项都需要更多依据','现有安排更容易延续，什么时候换取决于查到的条件','做过小试的选项有了实际依据，还需要核对底线'],
+    careerPlan:['当前方向大体延续，新岗位还在探索','已有实践能支持相近的任务，转岗还需实际机会','现有成果支持继续向相近的职责积累'],
+    money:['收支大体沿当前模式波动','已识别的波动项仍最容易挤压余量','已试过的支出调整有条件延续'],
+    general:['现状大体延续，变化仍处于探索阶段','小范围的进展有机会延续，卡点会影响能走多远','已经有记录的结果最有依据继续出现'],
+  };
+
   function questions(pack) {
     return [
       horizon,
@@ -219,6 +230,7 @@
   }
 
   function build(topic, answers, active, prompt = '') {
+    if (topic === 'careerStay') return buildCareerStay(answers,active);
     const pack = packs[topic];
     const { paths } = pack;
     const { horizon:horizonKey, fact, stage, barrier, capacity:capacityKey, priority, sign } = answers;
@@ -241,6 +253,7 @@
     ][stage];
     return {
       key, order, paths, path, headline:path.name, period:period.label, reason,
+      outlook:{ title:capacityKey === 'none' ? '眼下的安排大体延续' : continuity[topic][stage], basis:`这个走向以当前进展「${pack.stages[stage]}」和现实限制「${limit[0]}」为依据。` },
       comparison:alternatives.length ? { alternatives, criterion:compareCriteria[barrier] } : null,
       letter:[
         `${start}你当时说自己${priorities[priority][1]}`,
@@ -256,7 +269,56 @@
     };
   }
 
+  const stayPaths = {
+    stay:{name:'仍在目标行业工作', risk:'工作可以留在同一行业，所在公司和职责仍可能变化。', action:'核对眼前岗位或已经落实的安排，记录它能持续多久，以及行业内还有哪些相近岗位。'},
+    leave:{name:'在其他行业工作', risk:'已接受的安排也可能延期或取消，长期适应情况仍需要观察。', action:'核对跨行业岗位的书面安排、入职时间和你需要补的技能。'},
+    pending:{name:'去留取决于下一份确认', risk:'工作意向、投递和面试阶段都可能变化。', action:'把仍在接触的岗位和已经落实的安排列出来，优先核实哪一个能真正接上。'},
+  };
+  const careerStay = {
+    title:'职业与发展', english:'CAREER',
+    questions:[
+      horizon,
+      choice('industry','你现在就在问题里的这个行业工作吗？','从你实际所在的行业开始。',[
+        ['inside','是，我现在就在这个行业工作'],['outside','以前做过，目前已经离开'],['never','还没有进入这个行业'],
+      ]),
+      choice('change','目前有哪些去留变化已经落实？','选已经发生或明确确认的情况。',[
+        ['stay','已确认续签，或已接受这个行业的岗位'],['leave','已接受其他行业的岗位，或已确定跨行安排'],
+        ['risk','现岗位的结束时间已确定，去向还没着落'],['looking','正在考虑或面试其他行业，还没落实'],['none','暂时没有已落实的变化'],
+      ]),
+      { key:'fact', title:'还有什么已经发生的事，可能影响你的去留？', note:'可以写最近的岗位变动、确定的时间或你已经拿到的反馈。', text:{label:'补充现状（选填）',placeholder:'例如团队合并了，我已确认下个月继续做同一行业的项目。',max:260} },
+    ],
+  };
+
+  function buildCareerStay({ horizon:when, industry, change, fact }, active) {
+    const interval = FuturePrompt.label(horizonMonths(when));
+    const first = change === 'leave' ? 'leave' : change === 'stay' || (industry === 'inside' && ['looking','none'].includes(change)) ? 'stay' : 'pending';
+    const order = [first,...Object.keys(stayPaths).filter(key => key !== first)];
+    const key = active || first;
+    const path = stayPaths[key];
+    const basis = {
+      stay:'你已经确认了目标行业内的续签或岗位，这是目前支持留在这个行业的实际安排。',
+      leave:'你已经落实了跨行业安排。如果按计划执行，工作重心会先转到另一个行业。',
+      risk:'现岗位已确定会结束，而下一份去向还没落实。拿到并确认下一份安排后，才有更具体的落点。',
+      looking:industry === 'inside' ? '你现在仍在这个行业，跨行只到了考虑或面试阶段。以已经落实的现状为起点，延续更有依据。' : '你目前在目标行业之外，手头也没有已确认的目标行业岗位。接下来要看能否落实入行机会。',
+      none:industry === 'inside' ? '你现在就在这个行业，还没有已确认的跨行业去向。在这些条件延续的情况下，继续留在业内更有依据。' : '你目前还没有在目标行业工作的安排。你的下一份已确认岗位会直接影响这个走向。',
+    }[change];
+    const conditions = {
+      stay:'当前岗位延续，或下一份已确认的工作也属于这个行业。',
+      leave:'你落实并实际入职其他行业的岗位。',
+      pending:'现有岗位中止或你开始转行，而下一份安排依然没有确认。',
+    };
+    return {
+      key, order, paths:stayPaths, path, headline:path.name, period:`${interval}后`,
+      outlook:{ title:first === 'pending' ? '目前还难以判断会在哪个行业' : stayPaths[first].name, basis },
+      letter:[`如果接下来出现这个条件，${interval}后的情况可以沿这条路推演。${conditions[key]}`],
+      reality:{ fact, stage:careerStay.questions[1].options.find(([value])=>value===industry)[1], gate:conditions[key], fallback:'等下一份岗位或变动时间有了确认，可以把新情况补进来再推演。' },
+      action:path.action,
+      plan:['记下已落实的岗位与行业','区分面试意向和接受的录用','确认去向后更新推演'],
+    };
+  }
+
   const topics = Object.fromEntries(Object.entries(packs).map(([key, pack]) => [key, { ...pack, questions:questions(pack) }]));
+  topics.careerStay = careerStay;
   const demo = {
     horizon:'year', fact:'工作日回家已经十点，只能在地铁上学英语。上周录了一段自我介绍，说到一半卡住了。',
     stage:1, barrier:'time', capacity:'short', priority:'test', sign:'录一段两分钟的自我介绍，让没听过的人能说出我在做什么。',

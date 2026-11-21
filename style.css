@@ -61,14 +61,16 @@ nav a:hover, nav button:hover, .footer button:hover { color: var(--warm); }
 .question-composer { display: grid; gap: 12px; padding: clamp(16px, 3vw, 25px); border: 1px solid #786653; border-radius: 14px; background: #242f26; }
 .question-composer > label { color: var(--ink); font-weight: 700; }
 .compose-row { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 12px; }
-textarea, .route-confirm select { width: 100%; padding: 10px 13px; border: 1px solid #607565; border-radius: 8px; color: var(--ink); background: #15241d; }
+textarea { width: 100%; padding: 10px 13px; border: 1px solid #607565; border-radius: 8px; color: var(--ink); background: #15241d; }
 textarea { min-height: 64px; resize: vertical; }
 textarea::placeholder { color: #acbcad; }
 .question-examples { display: flex; flex-wrap: wrap; gap: 7px; }
 .question-examples button { padding: 5px 9px; border: 1px solid #536656; border-radius: 8px; background: #202f26; color: #d5ded4; font-size: .89rem; text-align: left; }
 .question-examples button:hover { border-color: var(--warm); color: var(--warm); }
-.route-confirm { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 12px; border-top: 1px solid #566657; }
-.route-confirm select { width: auto; min-height: 49px; }
+.quiz-topic { display: flex; gap: 6px 16px; flex-wrap: wrap; align-items: baseline; margin-bottom: 13px; color: var(--mint); }
+.quiz-topic strong { color: var(--ink); }
+.topic-correction { margin: 0; padding: 0; border: 0; font-size: .9rem; }
+.topic-correction div { display: flex; flex-wrap: wrap; gap: 8px 15px; padding-top: 8px; }
 .topic-heading { margin: 24px 0 11px; color: var(--muted); font-size: .99rem; }
 .topic-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
 .topic { --accent: var(--warm); display: grid; grid-template-columns: 40px minmax(0,1fr) auto; align-items: start; text-align: left; gap: 11px; min-width: 0; padding: 15px; background: #1f2d26; border: 1px solid #46594c; border-radius: 12px; color: var(--ink); transition: transform .18s, border-color .18s, background .18s; }
@@ -114,6 +116,7 @@ progress::-moz-progress-bar { background: var(--warm); }
 .option input:checked + .radio-mark { border: 5px solid var(--warm); }
 .option small { display: block; color: var(--muted); }
 .quiz-actions { justify-content: space-between; }
+.quiz-actions .primary { margin-inline-start: auto; }
 .number-options { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 17px; }
 .number-field, #assumptions label { display: grid; gap: 6px; font-size: .93rem; }
 .number-field > span:last-child, .unit-input { display: flex; align-items: center; background: #15241d; border: 1px solid #57705f; border-radius: 8px; overflow: hidden; }
@@ -123,8 +126,14 @@ progress::-moz-progress-bar { background: var(--warm); }
 
 .result-hero { position: relative; isolation: isolate; overflow: hidden; min-height: 247px; padding: clamp(22px, 5vw, 49px); display: flex; flex-direction: column; justify-content: center; gap: 10px; border: 1px solid #596959; border-radius: 16px; background: #212d24; }
 .result-glow { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg,#14241ff7 8%,#182820e4 42%,#15251b16 99%),url('future-gate.webp') 100% 52% / auto 160% no-repeat; }
-.result-hero > p:nth-of-type(2) { color: var(--warm); font: 800 clamp(1.25rem,3vw,1.9rem)/1.25 var(--serif); }
+.scenario-heading { color: var(--warm); font: 800 clamp(1.25rem,3vw,1.9rem)/1.25 var(--serif); }
 .result-question { max-width: 40rem; color: #e0e9df; overflow-wrap: anywhere; white-space: pre-wrap; }
+.outlook { display: grid; gap: 4px; max-width: 38rem; padding-top: 8px; }
+.outlook p:first-child { color: var(--mint); font-size: .9rem; }
+.outlook h2 { color: var(--warm); font-size: clamp(1.25rem,3vw,1.9rem); }
+.outlook p:last-child { color: var(--ink); }
+.scenario-menu { margin: 16px 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; }
+.scenario-menu .path-picker { margin-block: 10px 0; }
 .result-money { display: grid; margin-top: 8px; }
 .result-money strong { color: #ffdfc3; font: 500 clamp(1.3rem,4.1vw,2.8rem)/1.16 var(--mono); overflow-wrap: anywhere; }
 .result-money span { margin-top: 5px; color: #d2ddce; font-size: .86rem; }

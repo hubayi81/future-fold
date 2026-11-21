@@ -5,8 +5,6 @@
   const method = $('#method');
   const composer = $('#own-question');
   const promptInput = $('#own-text');
-  const route = $('#route-confirm');
-  const topicSelect = $('#own-topic');
   const storageKey = 'future-fold-session-v2';
   const year = new Date().getFullYear();
   const format = new Intl.NumberFormat('zh-CN', { maximumFractionDigits:0 });
@@ -32,7 +30,6 @@
     const topic = topics[key];
     return `<button class="topic ${key}" type="button" data-start="${key}"><span class="topic-icon" aria-hidden="true">${topic.icon}</span><span class="topic-text"><strong>${topic.title}</strong><span>${intro}</span></span><span class="topic-spark" aria-hidden="true">✦</span></button>`;
   }).join('');
-  topicSelect.innerHTML = [...entries.map(([key]) => key), 'general'].map(key => `<option value="${key}">${key === 'general' ? '其他 / 多个主题' : topics[key].title}</option>`).join('');
 
   function persist() {
     try {
@@ -151,10 +148,7 @@
     renderQuiz();
   }
 
-  promptInput.addEventListener('input', () => {
-    promptInput.setCustomValidity('');
-    route.hidden = true;
-  });
+  promptInput.addEventListener('input', () => promptInput.setCustomValidity(''));
   composer.addEventListener('submit', event => {
     event.preventDefault();
     const prompt = promptInput.value.trim();
@@ -163,9 +157,7 @@
       promptInput.reportValidity();
       return;
     }
-    if (route.hidden) topicSelect.value = FutureExplore.suggest(prompt);
-    route.hidden = false;
-    topicSelect.focus();
+    start(draft?.prompt === prompt ? draft.topic : FutureExplore.suggest(prompt),prompt);
   });
 
   function renderQuiz() {
@@ -175,6 +167,7 @@
     const total = questions.length;
     const answer = draft.answers[question.key];
     const carried = contextLabels(draft);
+    const correction = draft.prompt ? `<details class="topic-correction"><summary>修改主题</summary><div>${[...entries.map(([key]) => key),'general'].filter(key => key !== draft.topic).map(key => `<button type="button" class="text-button" data-change-topic="${key}">${topics[key].title}</button>`).join('')}</div></details>` : '';
     let fields;
     if (question.text) {
       const { label, placeholder, min, max } = question.text;
@@ -185,15 +178,16 @@
     } else {
       fields = question.options.map(([value, label, hint],index) => `<label class="option"><input type="radio" name="answer" value="${safe(value)}" ${String(answer) === String(value) ? 'checked' : ''} ${index === 0 ? 'required' : ''}><span class="radio-mark" aria-hidden="true"></span><span><strong>${label}</strong>${hint ? `<small>${hint}</small>` : ''}</span></label>`).join('');
     }
-    views.quiz.innerHTML = `<div class="flow-head"><button type="button" data-home class="text-button">‹ 主题选择</button><span class="eyebrow">${topic.english} / ${topic.title}</span></div>
+    views.quiz.innerHTML = `<div class="flow-head"><button type="button" data-home class="text-button">‹ 返回提问</button>${draft.prompt ? '' : `<span class="eyebrow">${topic.english} / ${topic.title}</span>`}</div>
       <div class="quiz-card">
-        <div class="quiz-progress"><span>第 ${draft.step+1} 题，共 ${total} 题</span><span>${Math.round((draft.step+1)/total*100)}%</span></div>
+        ${draft.prompt ? `<div class="quiz-topic"><p>主题 <strong>${topic.title}</strong> · ${draft.step === 0 ? `请回答 ${total} 个问题` : `还剩 ${total-draft.step} 个问题`}</p>${correction}</div>` : ''}
+        <div class="quiz-progress"><span>第 ${draft.step+1} 题${draft.prompt ? '' : `，共 ${total} 题`}</span><span>${Math.round((draft.step+1)/total*100)}%</span></div>
         <progress max="${total}" value="${draft.step+1}" aria-label="答题进度"></progress>
         ${draft.prompt ? `<p class="question-origin">你的问题 · ${safe(draft.prompt)}</p>` : ''}
         ${carried.length ? `<div class="context-note"><span>已带入 · ${carried.map(safe).join(' · ')}</span><button type="button" class="text-button" data-review>修改</button></div>` : ''}
         <h1 tabindex="-1">${question.title}</h1><p class="question-note" id="question-note">${question.note}</p>
         <form id="question" aria-describedby="question-note"><div class="options ${question.numbers ? 'number-options' : ''}">${fields}</div>
-          <div class="quiz-actions"><button type="button" class="button quiet" ${draft.step === 0 ? 'data-home' : 'data-back'}>${draft.step === 0 ? '换个主题' : '上一题'}</button><button class="button primary" type="submit">${draft.step+1 === total ? '展开我的未来' : '下一题'} <span aria-hidden="true">✦</span></button></div>
+          <div class="quiz-actions">${draft.step ? '<button type="button" class="button quiet" data-back>上一题</button>' : ''}<button class="button primary" type="submit">${draft.step+1 === total ? '查看推演' : '下一题'} <span aria-hidden="true">✦</span></button></div>
         </form>
       </div>`;
     const form = $('#question');
@@ -285,8 +279,8 @@
   function realityDetails({ stage, capacity, constraint, boundary, gate, sign, fallback }) {
     return `<section class="section-card reality">
       <h2>这条路凭什么走得通？</h2>
-      <dl><div><dt>你现在的起点</dt><dd>${stage}<br>每周余量 · ${capacity}</dd></div>
-      <div><dt>先照顾这个限制</dt><dd><strong>${constraint}</strong><br>${boundary}</dd></div>
+      <dl><div><dt>你现在的起点</dt><dd>${stage}${capacity ? `<br>每周余量 · ${capacity}` : ''}</dd></div>
+      ${constraint ? `<div><dt>先照顾这个限制</dt><dd><strong>${constraint}</strong><br>${boundary}</dd></div>` : ''}
       <div><dt>继续前需要的证据</dt><dd>${gate}</dd></div>
       ${sign ? `<div><dt>你想亲眼看到的变化</dt><dd>${safe(sign)}</dd></div>` : ''}
       <div><dt>如果条件还没到</dt><dd>${fallback}</dd></div></dl>
@@ -330,22 +324,26 @@
     const postmark = !result.period && Number.isInteger(a.years) ? year+a.years : null;
     const addressed = postmark ? `${postmark} 年` : period;
     const endpoint = result.projection?.endpoint;
+    const alternative = result.key !== result.order[0];
+    const alternativesOpen = keep && $('#scenario-menu',views.result)?.open;
     const basis = result.comparison && JSON.stringify([result.comparison.alternatives,a.barrier,a.sign]);
     const comparison = basis && state.comparisonChecks?.basis === basis ? state.comparisonChecks : { basis, values:['unknown','unknown'], threshold:'' };
     const scroll = window.scrollY;
     const letter = Array.isArray(result.letter)
-      ? `<blockquote>${safe(result.reality.fact)}</blockquote>${result.letter.map(paragraph => `<p>${paragraph}</p>`).join('')}`
+      ? `${result.reality.fact ? `<blockquote>${safe(result.reality.fact)}</blockquote>` : ''}${result.letter.map(paragraph => `<p>${paragraph}</p>`).join('')}`
       : `<p>${result.letter}</p>`;
     const evidence = result.evidence?.map(key => t.questions.find(item => item.key === key).options.find(([value]) => value === a[key])[1]);
     const exampleLink = example ? `<button type="button" class="text-button" data-example="${state.topic === 'salary' ? 'study' : 'salary'}">${state.topic === 'salary' ? '看学习示例' : '看工资示例'}</button>` : '';
     views.result.innerHTML = `<div class="flow-head"><button type="button" class="text-button" data-home>‹ ${example ? '返回首页' : '换个主题'}</button><span class="eyebrow">${example ? '示例报告' : `${t.english} / ${t.title}`}</span>${exampleLink}</div>
     <div class="result-hero">
       <div class="result-glow" aria-hidden="true"></div>
-      <p class="eyebrow"><span></span> ${postmark ? `POSTMARK / ${postmark}` : `${t.title} · 情景推演`}</p><h1 tabindex="-1">${period}的你</h1><p>${result.headline}</p>
+      <p class="eyebrow"><span></span> ${postmark ? `POSTMARK / ${postmark}` : `${t.title} · 情景推演`}</p><h1 tabindex="-1">${period}的你</h1>
       ${state.prompt || t.defaultQuestion ? `<p class="result-question">${safe(state.prompt || t.defaultQuestion)}</p>` : ''}
+      ${result.outlook ? `<section class="outlook"><p>当前依据最支持的走向</p><h2>${result.outlook.title}</h2><p>${result.outlook.basis}</p></section>` : `<p class="scenario-heading">${result.headline}</p>`}
+      ${alternative ? `<p class="scenario-heading">正在查看 · ${result.headline}</p>` : ''}
       ${endpoint ? `<div class="result-money"><strong>${range(endpoint)}</strong><span>人民币 / 月 · 税前固定月薪 · 按下方假设算出的区间</span></div>` : ''}
     </div>
-    <div class="path-picker"><span>${state.topic === 'salary' ? '切换时间线' : result.reason || '切换时间线'}</span><div role="group" aria-label="时间线">${result.order.map((id,index) => `<button type="button" class="path-button" data-path="${id}" aria-pressed="${id===result.key}">${result.paths[id].name}${index===0 ? '<small>先看这条</small>' : ''}</button>`).join('')}</div></div>
+    <details id="scenario-menu" class="scenario-menu" ${alternativesOpen ? 'open' : ''}><summary>比较其他情景</summary><div class="path-picker">${result.reason ? `<span>${result.reason}</span>` : ''}<div role="group" aria-label="时间线">${result.order.map(id => `<button type="button" class="path-button" data-path="${id}" aria-pressed="${id===result.key}">${result.paths[id].name}</button>`).join('')}</div></div></details>
     ${result.comparison ? compareOptions(result.comparison,a.sign,comparison.values,comparison.threshold) : ''}
     <div class="result-grid">
       <article class="section-card letter"><h2>未来来信</h2><p>嗨，现在的我：</p>${letter}<p class="letter-sign">来自 ${addressed}的一种可能 <span>✦</span></p></article>
@@ -461,9 +459,8 @@
       promptInput.value = control.dataset.prompt;
       promptInput.dispatchEvent(new Event('input'));
       composer.requestSubmit();
-    } else if (control.matches('[data-confirm-topic]')) {
-      if (composer.reportValidity()) start(topicSelect.value, promptInput.value.trim());
-    } else if (control.dataset.start) start(control.dataset.start);
+    } else if (control.dataset.changeTopic) start(control.dataset.changeTopic,draft.prompt);
+    else if (control.dataset.start) start(control.dataset.start);
     else if (control.matches('[data-resume]')) { if (draft.done) renderResult(); else renderQuiz(); }
     else if (control.matches('[data-erase]')) {
       draft = null;

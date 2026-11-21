@@ -130,7 +130,7 @@
     if (Object.hasOwn(FutureExplore.topics, topic)) return FutureExplore.build(topic, a, active, prompt);
     if (topic === 'salary') {
       const paths = a.field === 'starting' ? firstJobPaths : salaryPaths;
-      const order = [a.move, ...Object.keys(paths).filter(key => key !== a.move)];
+      const order = [...new Set(['stay',a.move,...Object.keys(paths)])];
       const key = active || order[0];
       const path = paths[key];
       const projection = salaryProjection(a,key,edits[key]);
@@ -140,6 +140,13 @@
         : `同时记得${salaryGuard[a.reserve]}。`;
       return {
         key, order, paths, path, headline:path.name,
+        outlook: a.pay > 0 ? {
+          title:'先沿当前工资起点看后续变化',
+          basis:'这条基准情景沿用你提供的月薪和年涨幅假设。已经落实的调薪、晋升或换岗，可以作为另外一条情景单独核对。',
+        } : {
+          title:'先核实一个工资起点',
+          basis:'目前缺少可用于计算的税前固定月薪。核实当前工资或拿到书面报价后，就能把它作为推演的起点。',
+        },
         letter:`写信这天，我想起我们还在${a.field === 'starting' ? '摸索方向' : workLabels[a.field][0] + '这条路上'}时，对收入的那点好奇。${premise}为了知道这个情景离现实多远，我可以拿${workLabels[a.field][1]}去问清机会的条件。`,
         plan:['梳理一项有证据的成果', key === 'stay' ? '在调薪周期前确认标准' : '用一个真实机会验证待遇', '按新的信息更新薪资区间'],
         action:`${path.action}${salaryEvidence[a.proof]} ${guard}`,
