@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#13201b">
+  <meta name="description" content="把关于学习、生活、关系或人生选择的问题写下来，从你的真实现状出发，看看三条可能的路。">
+  <title>未来有信 · 给未来的自己寄个问题</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2320352b'/%3E%3Cpath d='M32 7q1 23 25 25Q33 33 32 57 31 33 7 32 31 31 32 7' fill='%23fac19e'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="prompt.js"></script>
+  <script defer src="explore.js"></script>
+  <script defer src="model.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar"><div class="shell top-inner">
+    <a class="brand" href="#home" aria-label="未来有信首页"><span class="brand-mark" aria-hidden="true">✦</span><span>未来有信<small>FUTURE FOLD</small></span></a>
+    <nav aria-label="主导航"><a href="#example" data-example="study">看示例</a><button type="button" data-method>推演方法</button></nav>
+  </div></header>
+  <main id="main">
+    <div id="home-view">
+      <section class="hero shell" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span> 寄往未来 <b>·</b> POSTCARD TO TOMORROW</p>
+          <h1 id="hero-title">给未来的自己<br><em>寄个问题。</em></h1>
+          <p class="intro">一年后，我能学会一直想学的东西吗？<br>从你经历的事出发，看看三条可能的路。</p>
+          <div class="hero-actions"><button class="button primary" type="button" data-pick>写下我的问题 <span aria-hidden="true">✦</span></button><a class="button quiet" href="#example" data-example="study">先看看结果</a></div>
+        </div>
+        <figure class="hero-art">
+          <div class="hero-image" role="img" aria-label="一个小小的身影沿着小路走向夕照里的未来城市"></div>
+          <figcaption><span><i></i> THE OTHER SIDE OF NOW</span><span>未来收件处</span></figcaption>
+        </figure>
+      </section>
+      <section class="topics shell" id="topics" aria-labelledby="topics-title">
+        <div class="section-heading"><div><p class="eyebrow"><span></span> YOUR QUESTION</p><h2 id="topics-title" tabindex="-1">你想问未来什么？</h2></div></div>
+        <form class="question-composer" id="own-question">
+          <label for="own-text">用自己的话写一个最近在想的问题</label>
+          <div class="compose-row"><textarea id="own-text" name="prompt" rows="2" minlength="4" maxlength="180" placeholder="例如，一年后我能用英语做一次自我介绍吗？" required></textarea><button class="button primary" type="submit">继续 <span aria-hidden="true">✦</span></button></div>
+          <div class="question-examples" aria-label="试试这些问题"><button type="button" data-prompt="现在开始练习，一年后我能用英语做一次自我介绍吗？">一年后我能用英语做自我介绍吗？</button><button type="button" data-prompt="留在现在的城市，还是去杭州试着生活？">该不该换个城市生活？</button><button type="button" data-prompt="搬走以后，我还能和异地的朋友保持联系吗？">怎样和异地朋友保持联系？</button></div>
+          <div class="route-confirm" id="route-confirm" hidden><label for="own-topic">这次主要聊</label><select id="own-topic" name="topic"></select><button type="button" class="button primary" data-confirm-topic>开始回答</button></div>
+          <p class="caption">问题和答案只留在这个浏览器标签页的会话中。</p>
+        </form>
+        <h3 class="topic-heading">也可以从一个主题开始</h3>
+        <div class="topic-grid" id="topic-grid" aria-label="推演主题"></div>
+        <div id="resume-home"></div>
+      </section>
+    </div>
+    <section id="quiz-view" class="shell inner-view" hidden aria-label="未来问卷"></section>
+    <section id="result-view" class="shell inner-view" hidden aria-label="未来推演报告"></section>
+  </main>
+  <footer class="shell footer"><a class="brand footer-brand" href="#home"><span aria-hidden="true">✦</span> 未来有信</a><span>答案只在当前浏览器会话中保留。</span><button type="button" data-method>推演方法</button></footer>
+  <dialog id="method" aria-labelledby="method-title">
+    <form method="dialog" class="dialog-top"><span class="eyebrow">HOW IT WORKS</span><button aria-label="关闭推演方法">×</button></form>
+    <h2 id="method-title">这封信是怎么算出来的？</h2>
+    <p>自定义问题会先推荐一个主题，并带入写得明确的期限等信息。问卷会继续了解推演还需要哪些现状，再展开三条可能的路径。已带入的信息可以修改。</p>
+    <h3>什么是这里的推演</h3><p>从你提供的事实出发，看看不同做法在什么条件下可能走通。排序结合你的进展、在意的取舍和可用资源。每条路径都有可以亲自核对的证据，以及条件没达到时的调整办法。</p>
+    <h3>工资区间</h3><p>以你提供的税前固定月薪为起点，按年涨幅和变动月份计算。作品和收入底线影响核实机会的行动。涨幅与发生时间是单独的演示假设，可以用实测数据替换。你还可以看变动没有发生的情景。</p>
+    <h3>文字从哪来</h3><p>浏览器按固定情景规则生成来信。问卷里你写下的原话会作为当前情况出现在报告中。分享卡只显示主题、时间和路径，工资区间需主动勾选。</p>
+    <h3>参考案例</h3><ul><li><a href="https://futureyou.media.mit.edu/" target="_blank" rel="noopener">MIT Future You</a> · 用当下的目标写出未来视角</li><li><a href="https://newsroom.spotify.com/2024-12-04/wrapped-user-experience-2024/" target="_blank" rel="noopener">Spotify Wrapped</a> · 可保存的个性化结果卡</li><li><a href="https://www.levels.fyi/compare/" target="_blank" rel="noopener">Levels.fyi</a> · 明确岗位、地点及薪酬口径</li></ul>
+    <h3>方法参考</h3><ul><li><a href="https://www.gov.uk/service-manual/design/form-structure" target="_blank" rel="noopener">GOV.UK 表单设计</a> · 按需追问</li><li><a href="https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-1/" target="_blank" rel="noopener">IPCC 情景方法</a> · 显示假设，比较发生与未发生</li><li><a href="https://nodis3.gsfc.nasa.gov/displayAll.cfm?Internal_ID=N_PR_7123_001B_&amp;page_name=ALL" target="_blank" rel="noopener">NASA 决策分析</a> · 在同一标准下比较备选</li><li><a href="https://www.ihi.org/library/model-for-improvement/testing-changes" target="_blank" rel="noopener">IHI 改进方法</a> · 小规模试验、观察和更新</li></ul>
+  </dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
